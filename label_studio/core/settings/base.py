@@ -20,7 +20,7 @@ from django.core.exceptions import ImproperlyConfigured
 from label_studio.core.utils.params import get_bool_env, get_env_list
 
 formatter = 'standard'
-JSON_LOG = get_bool_env('JSON_LOG', False)
+JSON_LOG = get_bool_env('JSON_LOG', True)
 if JSON_LOG:
     formatter = 'json'
 
@@ -42,9 +42,19 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': formatter,
         },
+        'logstash': {
+            'level': 'INFO',
+            'class': 'logstash_async.handler.AsynchronousLogstashHandler',
+            'host': os.environ.get('LABEL_STUDIO_LOGSTASH_HOST', 'localhost'),
+            'port': int(os.environ.get('LABEL_STUDIO_LOGSTASH_PORT', 5000)),
+            'ssl_enable': False,
+            'database_path': 'logstash.db',
+            'transport': 'logstash_async.transport.TcpTransport',
+            'formatter': 'json',
+        },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'logstash'],
         'level': os.environ.get('LOG_LEVEL', 'DEBUG'),
     },
     'loggers': {
@@ -53,20 +63,20 @@ LOGGING = {
         'asyncio': {'level': 'WARNING'},
         'rules': {'level': 'WARNING'},
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'logstash'],
             # 'propagate': True,
         },
         'django_auth_ldap': {'level': os.environ.get('LOG_LEVEL', 'DEBUG')},
         'rq.worker': {
-            'handlers': ['console'],
+            'handlers': ['console', 'logstash'],
             'level': os.environ.get('LOG_LEVEL', 'INFO'),
         },
         'ddtrace': {
-            'handlers': ['console'],
+            'handlers': ['console', 'logstash'],
             'level': 'WARNING',
         },
         'ldclient.util': {
-            'handlers': ['console'],
+            'handlers': ['console', 'logstash'],
             'level': 'ERROR',
         },
     },
@@ -161,7 +171,7 @@ DATABASES_ALL = {
     DJANGO_DB_MYSQL: {
         'ENGINE': 'django.db.backends.mysql',
         'USER': get_env('MYSQL_USER', 'root'),
-        'PASSWORD': get_env('MYSQL_PASSWORD', ''),
+        'PASSWORD': get_env('MYSQL_PASSWORD', '123456'),
         'NAME': get_env('MYSQL_NAME', 'labelstudio'),
         'HOST': get_env('MYSQL_HOST', 'localhost'),
         'PORT': int(get_env('MYSQL_PORT', '3306')),
