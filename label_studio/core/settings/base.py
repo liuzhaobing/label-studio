@@ -31,7 +31,10 @@ LOGGING = {
         'json': {
             '()': 'label_studio.core.utils.formatter.CustomJsonFormatter',
             'format': '[%(asctime)s] [%(name)s::%(funcName)s::%(lineno)d] [%(levelname)s] [%(user_id)s] %(message)s',
-            'datefmt': '%d/%b/%Y:%H:%M:%S %z',
+            'rename_fields': {
+                'asctime': 'time',
+                'levelname': 'level',
+            }
         },
         'standard': {
             'format': '[%(asctime)s] [%(name)s::%(funcName)s::%(lineno)d] [%(levelname)s] %(message)s',
